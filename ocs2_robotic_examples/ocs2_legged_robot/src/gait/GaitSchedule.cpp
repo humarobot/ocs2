@@ -50,7 +50,7 @@ void GaitSchedule::insertModeSequenceTemplate(const ModeSequenceTemplate& modeSe
 
   // find the index on which the new gait should be added
   const size_t index = std::lower_bound(eventTimes.begin(), eventTimes.end(), startTime) - eventTimes.begin();
-
+  // std::cout<<startTime<<"  "<<finalTime<<" "<<*eventTimes.begin()<<" "<<*eventTimes.end()<<std::endl;
   // delete the old logic from the index
   if (index < eventTimes.size()) {
     eventTimes.erase(eventTimes.begin() + index, eventTimes.end());
@@ -101,6 +101,65 @@ ModeSchedule GaitSchedule::getModeSchedule(scalar_t lowerBoundTime, scalar_t upp
   return modeSchedule_;
 }
 
+std::vector<bool> GaitSchedule::getContactState(scalar_t queryTime) {
+  std::vector<bool> contact;
+  auto& eventTimes = modeSchedule_.eventTimes;
+  auto& modeSequence = modeSchedule_.modeSequence;
+  const size_t index = std::lower_bound(eventTimes.begin(), eventTimes.end(), queryTime)- eventTimes.begin();
+  // std::cout<<modeSequence[index]<<std::endl;
+  switch (modeSequence[index]) {// {LF, RF, LH, RH}
+  case 0:
+    contact = std::vector<bool>{false, false, false, false};
+    break;  // 0:  0-leg-stance
+  case 1:
+    contact = std::vector<bool>{false, false, false, true};
+    break;  // 1:  RH
+  case 2:
+    contact = std::vector<bool>{false, false, true, false};
+    break;  // 2:  LH
+  case 3:
+    contact = std::vector<bool>{false, false, true, true};
+    break;  // 3:  RH, LH
+  case 4:
+    contact = std::vector<bool>{false, true, false, false};
+    break;  // 4:  RF
+  case 5:
+    contact = std::vector<bool>{false, true, false, true};
+    break;  // 5:  RF, RH
+  case 6:
+    contact = std::vector<bool>{false, true, true, false};
+    break;  // 6:  RF, LH
+  case 7:
+    contact = std::vector<bool>{false, true, true, true};
+    break;  // 7:  RF, LH, RH
+  case 8:
+    contact = std::vector<bool>{true, false, false, false};
+    break;  // 8:  LF,
+  case 9:
+    contact = std::vector<bool>{true, false, false, true};
+    break;  // 9:  LF, RH
+  case 10:
+    contact = std::vector<bool>{true, false, true, false};
+    break;  // 10: LF, LH
+  case 11:
+    contact = std::vector<bool>{true, false, true, true};
+    break;  // 11: LF, LH, RH
+  case 12:
+    contact = std::vector<bool>{true, true, false, false};
+    break;  // 12: LF, RF
+  case 13:
+    contact = std::vector<bool>{true, true, false, true};
+    break;  // 13: LF, RF, RH
+  case 14:
+    contact = std::vector<bool>{true, true, true, false};
+    break;  // 14: LF, RF, LH
+  case 15:
+    contact = std::vector<bool>{true, true, true, true};
+    break;  // 15: 4-leg-stance
+}
+
+return contact;
+}
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
@@ -124,6 +183,7 @@ void GaitSchedule::tileModeSequenceTemplate(scalar_t startTime, scalar_t finalTi
   eventTimes.push_back(startTime);
 
   // concatenate from index
+  // std::cout<<eventTimes.front()<<" "<<(eventTimes.back())<<std::endl;
   while (eventTimes.back() < finalTime) {
     for (size_t i = 0; i < templateModeSequence.size(); i++) {
       modeSequence.push_back(templateModeSequence[i]);

@@ -49,6 +49,8 @@ class GaitSchedule {
    */
   ModeSchedule getModeSchedule(scalar_t lowerBoundTime, scalar_t upperBoundTime);
 
+  std::vector<bool> getContactState(scalar_t queryTime);
+
   /**
    * Used to insert a new user defined logic in the given time period.
    *
@@ -56,6 +58,7 @@ class GaitSchedule {
    * @param [in] finalTime: The final time until when the new mode sequence needs to be defined.
    */
   void insertModeSequenceTemplate(const ModeSequenceTemplate& modeSequenceTemplate, scalar_t startTime, scalar_t finalTime);
+
 
  private:
   /**

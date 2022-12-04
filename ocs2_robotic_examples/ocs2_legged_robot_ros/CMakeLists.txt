@@ -89,19 +89,19 @@ target_link_libraries(${PROJECT_NAME}
 target_compile_options(${PROJECT_NAME} PUBLIC ${OCS2_CXX_FLAGS})
 
 # DDP-MPC node for legged robot
-add_executable(legged_robot_ddp_mpc
-  src/LeggedRobotDdpMpcNode.cpp
-)
-add_dependencies(legged_robot_ddp_mpc
-  ${PROJECT_NAME}
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-)
-target_link_libraries(legged_robot_ddp_mpc
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-)
-target_compile_options(legged_robot_ddp_mpc PRIVATE ${OCS2_CXX_FLAGS})
+# add_executable(legged_robot_ddp_mpc
+#   src/LeggedRobotDdpMpcNode.cpp
+# )
+# add_dependencies(legged_robot_ddp_mpc
+#   ${PROJECT_NAME}
+#   ${${PROJECT_NAME}_EXPORTED_TARGETS}
+#   ${catkin_EXPORTED_TARGETS}
+# )
+# target_link_libraries(legged_robot_ddp_mpc
+#   ${PROJECT_NAME}
+#   ${catkin_LIBRARIES}
+# )
+# target_compile_options(legged_robot_ddp_mpc PRIVATE ${OCS2_CXX_FLAGS})
 
 ## SQP-MPC node for legged robot
 add_executable(legged_robot_sqp_mpc
@@ -172,7 +172,7 @@ if(cmake_clang_tools_FOUND)
    add_clang_tooling(
      TARGETS
        ${PROJECT_NAME}
-       legged_robot_ddp_mpc
+      #  legged_robot_ddp_mpc
        legged_robot_sqp_mpc
        legged_robot_dummy
        legged_robot_target
@@ -196,7 +196,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 install(
   TARGETS
-    legged_robot_ddp_mpc
+    # legged_robot_ddp_mpc
     legged_robot_sqp_mpc
     legged_robot_dummy
     legged_robot_target
