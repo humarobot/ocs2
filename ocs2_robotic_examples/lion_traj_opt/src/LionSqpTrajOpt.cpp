@@ -1,7 +1,8 @@
-#include "ros/ros.h"
-#include "lion_interface.hpp"
 #include <ocs2_ros_interfaces/synchronized_module/RosReferenceManager.h>
 #include <ocs2_sqp/MultipleShootingMpc.h>
+
+#include "LionInterface.hpp"
+#include "ros/ros.h"
 
 using namespace ocs2;
 using namespace legged_robot;
@@ -18,11 +19,12 @@ int main(int argc, char** argv) {
   // Create the robot interface
   LionRobotInterface robotInterface(taskFile, urdfFile, referenceFile);
 
-  // Create the robot interface node
-//   RobotInterfaceNode robotInterfaceNode(nh, nh_private, robotInterface);
+  // Create a multipuleshootingsolver
+  MultipleShootingSolver solver(robotInterface.sqpSettings(), robotInterface.getOptimalControlProblem(),
+                                robotInterface.getInitializer());
 
-  // Run the node
-  ros::spin();
+  // Solve the problem
+  // solver.run(initTime, initState, finalTime);
 
   return 0;
 }

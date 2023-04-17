@@ -53,7 +53,6 @@ void GaitReceiver::preSolverRun(scalar_t initTime, scalar_t finalTime, const vec
     std::cerr << "[GaitReceiver]: Setting new gait after time " << finalTime << "\n";
     std::cerr << receivedGait_;
     const auto timeHorizon = finalTime - initTime;
-    // std::cout<<initTime<<"  "<<finalTime<<std::endl;
     gaitSchedulePtr_->insertModeSequenceTemplate(receivedGait_, finalTime, timeHorizon);
     gaitUpdated_ = false;
   }

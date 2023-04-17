@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+
+<launch>
+    <!-- visualization config -->
+    <arg name="rviz"               default="true" />
+    <arg name="description_name"   default="lion_description"/>
+    <arg name="multiplot"          default="false"/>
+
+    <!-- The task file for the mpc. -->
+    <arg name="taskFile"          default="$(find lion_traj_opt)/config/task.info"/>
+    <!-- The reference related config file of the robot -->
+    <arg name="referenceFile"     default="$(find lion_traj_opt)/config/reference.info"/>
+    <!-- The URDF model of the robot -->
+    <arg name="urdfFile"          default="$(find ocs2_robotic_assets)/resources/lion/urdf/lion.urdf"/>
+    <!-- The file defining gait definition -->
+    <arg name="gaitCommandFile"   default="$(find lion_traj_opt)/config/gait.info"/>
+
+    <!-- rviz -->
+    <group if="$(arg rviz)">
+      <param name="$(arg description_name)" textfile="$(arg urdfFile)"/>
+      <arg name="rvizconfig" default="$(find lion_traj_opt)/config/lion.rviz" />
+      <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rvizconfig)" output="screen" />
+    </group>
+
+    <!-- multiplot -->
+    <group if="$(arg multiplot)">
+      <include file="$(find ocs2_legged_robot_ros)/launch/multiplot.launch"/>
+    </group>
+
+    <!-- make the files into global parameters -->
+    <param name="taskFile"          value="$(arg taskFile)" />
+    <param name="referenceFile"     value="$(arg referenceFile)" />
+    <param name="urdfFile"          value="$(arg urdfFile)" />
+    <param name="gaitCommandFile"   value="$(arg gaitCommandFile)"/>
+
+    <node pkg="lion_traj_opt" type="lion_traj_opt" name="lion_traj_opt"
+          output="screen" launch-prefix=""/>
+</launch>

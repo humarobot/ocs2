@@ -171,8 +171,8 @@ include_directories(
 # # With catkin_make all packages are built within a single CMake context
 # # The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}
-    src/lion_sqp_TO_node.cpp
-    src/lion_interface.cpp
+    src/LionSqpTrajOpt.cpp
+    src/LionInterface.cpp
 )
 
 # # Rename C++ executable without prefix
