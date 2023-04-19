@@ -27,17 +27,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-#include <iostream>
-#include <string>
-
-#include <pinocchio/fwd.hpp>  // forward declarations must be included first.
-
-#include <pinocchio/algorithm/frames.hpp>
-#include <pinocchio/algorithm/jacobian.hpp>
-#include <pinocchio/algorithm/kinematics.hpp>
-
-#include <LionInterface.hpp>
-
 #include <ocs2_centroidal_model/AccessHelperFunctions.h>
 #include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>
 #include <ocs2_centroidal_model/ModelHelperFunctions.h>
@@ -45,6 +34,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ocs2_core/soft_constraint/StateInputSoftConstraint.h>
 #include <ocs2_oc/synchronized_module/SolverSynchronizedModule.h>
 #include <ocs2_pinocchio_interface/PinocchioEndEffectorKinematicsCppAd.h>
+
+#include <LionInterface.hpp>
+#include <iostream>
+#include <pinocchio/algorithm/frames.hpp>
+#include <pinocchio/algorithm/jacobian.hpp>
+#include <pinocchio/algorithm/kinematics.hpp>
+#include <pinocchio/fwd.hpp>  // forward declarations must be included first.
+#include <string>
 
 #include "ocs2_legged_robot/LeggedRobotPreComputation.h"
 #include "ocs2_legged_robot/constraint/FrictionConeConstraint.h"
@@ -64,7 +61,8 @@ namespace legged_robot {
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-LionRobotInterface::LionRobotInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile) {
+LionRobotInterface::LionRobotInterface(const std::string& taskFile, const std::string& urdfFile,
+                                       const std::string& referenceFile) {
   // check that task file exists
   boost::filesystem::path taskFilePath(taskFile);
   if (boost::filesystem::exists(taskFilePath)) {
@@ -109,36 +107,40 @@ LionRobotInterface::LionRobotInterface(const std::string& taskFile, const std::s
 /******************************************************************************************************/
 /******************************************************************************************************/
 void LionRobotInterface::setupOptimalConrolProblem(const std::string& taskFile, const std::string& urdfFile,
-                                                     const std::string& referenceFile, bool verbose) {
+                                                   const std::string& referenceFile, bool verbose) {
   // PinocchioInterface
-  pinocchioInterfacePtr_.reset(new PinocchioInterface(centroidal_model::createPinocchioInterface(urdfFile, modelSettings_.jointNames)));
+  pinocchioInterfacePtr_.reset(
+      new PinocchioInterface(centroidal_model::createPinocchioInterface(urdfFile, modelSettings_.jointNames)));
 
   // CentroidalModelInfo
   centroidalModelInfo_ = centroidal_model::createCentroidalModelInfo(
       *pinocchioInterfacePtr_, centroidal_model::loadCentroidalType(taskFile),
-      centroidal_model::loadDefaultJointState(pinocchioInterfacePtr_->getModel().nq - 6, referenceFile), modelSettings_.contactNames3DoF,
-      modelSettings_.contactNames6DoF);
+      centroidal_model::loadDefaultJointState(pinocchioInterfacePtr_->getModel().nq - 6, referenceFile),
+      modelSettings_.contactNames3DoF, modelSettings_.contactNames6DoF);
 
   // Swing trajectory planner
   std::unique_ptr<SwingTrajectoryPlanner> swingTrajectoryPlanner(
       new SwingTrajectoryPlanner(loadSwingTrajectorySettings(taskFile, "swing_trajectory_config", verbose), 4));
 
   // Mode schedule manager
-  referenceManagerPtr_ =
-      std::make_shared<SwitchedModelReferenceManager>(loadGaitSchedule(referenceFile, verbose), std::move(swingTrajectoryPlanner));
+  referenceManagerPtr_ = std::make_shared<SwitchedModelReferenceManager>(loadGaitSchedule(referenceFile, verbose),
+                                                                         std::move(swingTrajectoryPlanner));
 
   // Optimal control problem
   problemPtr_.reset(new OptimalControlProblem);
 
   // Dynamics
   bool useAnalyticalGradientsDynamics = false;
-  loadData::loadCppDataType(taskFile, "legged_robot_interface.useAnalyticalGradientsDynamics", useAnalyticalGradientsDynamics);
+  loadData::loadCppDataType(taskFile, "legged_robot_interface.useAnalyticalGradientsDynamics",
+                            useAnalyticalGradientsDynamics);
   std::unique_ptr<SystemDynamicsBase> dynamicsPtr;
   if (useAnalyticalGradientsDynamics) {
-    throw std::runtime_error("[LionRobotInterface::setupOptimalConrolProblem] The analytical dynamics class is not yet implemented!");
+    throw std::runtime_error(
+        "[LionRobotInterface::setupOptimalConrolProblem] The analytical dynamics class is not yet implemented!");
   } else {
     const std::string modelName = "dynamics";
-    dynamicsPtr.reset(new LeggedRobotDynamicsAD(*pinocchioInterfacePtr_, centroidalModelInfo_, modelName, modelSettings_));
+    dynamicsPtr.reset(
+        new LeggedRobotDynamicsAD(*pinocchioInterfacePtr_, centroidalModelInfo_, modelName, modelSettings_));
   }
 
   problemPtr_->dynamicsPtr = std::move(dynamicsPtr);
@@ -153,46 +155,52 @@ void LionRobotInterface::setupOptimalConrolProblem(const std::string& taskFile, 
   std::tie(frictionCoefficient, barrierPenaltyConfig) = loadFrictionConeSettings(taskFile, verbose);
 
   bool useAnalyticalGradientsConstraints = false;
-  loadData::loadCppDataType(taskFile, "legged_robot_interface.useAnalyticalGradientsConstraints", useAnalyticalGradientsConstraints);
+  loadData::loadCppDataType(taskFile, "legged_robot_interface.useAnalyticalGradientsConstraints",
+                            useAnalyticalGradientsConstraints);
   for (size_t i = 0; i < centroidalModelInfo_.numThreeDofContacts; i++) {
     const std::string& footName = modelSettings_.contactNames3DoF[i];
 
     std::unique_ptr<EndEffectorKinematics<scalar_t>> eeKinematicsPtr;
     if (useAnalyticalGradientsConstraints) {
       throw std::runtime_error(
-          "[LionRobotInterface::setupOptimalConrolProblem] The analytical end-effector linear constraint is not implemented!");
+          "[LionRobotInterface::setupOptimalConrolProblem] The analytical end-effector linear constraint is not "
+          "implemented!");
     } else {
       const auto infoCppAd = centroidalModelInfo_.toCppAd();
       const CentroidalModelPinocchioMappingCppAd pinocchioMappingCppAd(infoCppAd);
-      auto velocityUpdateCallback = [&infoCppAd](const ad_vector_t& state, PinocchioInterfaceCppAd& pinocchioInterfaceAd) {
+      auto velocityUpdateCallback = [&infoCppAd](const ad_vector_t& state,
+                                                 PinocchioInterfaceCppAd& pinocchioInterfaceAd) {
         const ad_vector_t q = centroidal_model::getGeneralizedCoordinates(state, infoCppAd);
         updateCentroidalDynamics(pinocchioInterfaceAd, infoCppAd, q);
       };
-      eeKinematicsPtr.reset(new PinocchioEndEffectorKinematicsCppAd(*pinocchioInterfacePtr_, pinocchioMappingCppAd, {footName},
-                                                                    centroidalModelInfo_.stateDim, centroidalModelInfo_.inputDim,
-                                                                    velocityUpdateCallback, footName, modelSettings_.modelFolderCppAd,
-                                                                    modelSettings_.recompileLibrariesCppAd, modelSettings_.verboseCppAd));
+      eeKinematicsPtr.reset(new PinocchioEndEffectorKinematicsCppAd(
+          *pinocchioInterfacePtr_, pinocchioMappingCppAd, {footName}, centroidalModelInfo_.stateDim,
+          centroidalModelInfo_.inputDim, velocityUpdateCallback, footName, modelSettings_.modelFolderCppAd,
+          modelSettings_.recompileLibrariesCppAd, modelSettings_.verboseCppAd));
     }
 
     problemPtr_->softConstraintPtr->add(footName + "_frictionCone",
                                         getFrictionConeConstraint(i, frictionCoefficient, barrierPenaltyConfig));
     problemPtr_->equalityConstraintPtr->add(footName + "_zeroForce", getZeroForceConstraint(i));
-    problemPtr_->equalityConstraintPtr->add(footName + "_zeroVelocity",
-                                            getZeroVelocityConstraint(*eeKinematicsPtr, i, useAnalyticalGradientsConstraints));
-    problemPtr_->equalityConstraintPtr->add(footName + "_normalVelocity",
-                                            getNormalVelocityConstraint(*eeKinematicsPtr, i, useAnalyticalGradientsConstraints));
+    problemPtr_->equalityConstraintPtr->add(
+        footName + "_zeroVelocity", getZeroVelocityConstraint(*eeKinematicsPtr, i, useAnalyticalGradientsConstraints));
+    problemPtr_->equalityConstraintPtr->add(
+        footName + "_normalVelocity",
+        getNormalVelocityConstraint(*eeKinematicsPtr, i, useAnalyticalGradientsConstraints));
   }
 
   // Pre-computation
   problemPtr_->preComputationPtr.reset(new LeggedRobotPreComputation(*pinocchioInterfacePtr_, centroidalModelInfo_,
-                                                                     *referenceManagerPtr_->getSwingTrajectoryPlanner(), modelSettings_));
+                                                                     *referenceManagerPtr_->getSwingTrajectoryPlanner(),
+                                                                     modelSettings_));
 
   // Rollout
   rolloutPtr_.reset(new TimeTriggeredRollout(*problemPtr_->dynamicsPtr, rolloutSettings_));
 
   // Initialization
   constexpr bool extendNormalizedMomentum = true;
-  initializerPtr_.reset(new LeggedRobotInitializer(centroidalModelInfo_, *referenceManagerPtr_, extendNormalizedMomentum));
+  initializerPtr_.reset(
+      new LeggedRobotInitializer(centroidalModelInfo_, *referenceManagerPtr_, extendNormalizedMomentum));
 }
 
 /******************************************************************************************************/
@@ -206,7 +214,8 @@ std::shared_ptr<GaitSchedule> LionRobotInterface::loadGaitSchedule(const std::st
     Gait gait{};
     gait.duration = defaultModeSequenceTemplate.switchingTimes.back();
     // Events: from time -> phase
-    std::for_each(defaultModeSequenceTemplate.switchingTimes.begin() + 1, defaultModeSequenceTemplate.switchingTimes.end() - 1,
+    std::for_each(defaultModeSequenceTemplate.switchingTimes.begin() + 1,
+                  defaultModeSequenceTemplate.switchingTimes.end() - 1,
                   [&](double eventTime) { gait.eventPhases.push_back(eventTime / gait.duration); });
     // Modes:
     gait.modeSequence = defaultModeSequenceTemplate.modeSequence;
@@ -222,7 +231,8 @@ std::shared_ptr<GaitSchedule> LionRobotInterface::loadGaitSchedule(const std::st
     std::cerr << "#### =============================================================================\n";
   }
 
-  return std::make_shared<GaitSchedule>(initModeSchedule, defaultModeSequenceTemplate, modelSettings_.phaseTransitionStanceTime);
+  return std::make_shared<GaitSchedule>(initModeSchedule, defaultModeSequenceTemplate,
+                                        modelSettings_.phaseTransitionStanceTime);
 }
 
 /******************************************************************************************************/
@@ -243,8 +253,8 @@ matrix_t LionRobotInterface::initializeInputCostWeight(const std::string& taskFi
   matrix_t baseToFeetJacobians(totalContactDim, info.actuatedDofNum);
   for (size_t i = 0; i < info.numThreeDofContacts; i++) {
     matrix_t jacobianWorldToContactPointInWorldFrame = matrix_t::Zero(6, info.generalizedCoordinatesNum);
-    pinocchio::getFrameJacobian(model, data, model.getBodyId(modelSettings_.contactNames3DoF[i]), pinocchio::LOCAL_WORLD_ALIGNED,
-                                jacobianWorldToContactPointInWorldFrame);
+    pinocchio::getFrameJacobian(model, data, model.getBodyId(modelSettings_.contactNames3DoF[i]),
+                                pinocchio::LOCAL_WORLD_ALIGNED, jacobianWorldToContactPointInWorldFrame);
 
     baseToFeetJacobians.block(3 * i, 0, 3, info.actuatedDofNum) =
         jacobianWorldToContactPointInWorldFrame.block(0, 6, 3, info.actuatedDofNum);
@@ -258,15 +268,16 @@ matrix_t LionRobotInterface::initializeInputCostWeight(const std::string& taskFi
   R.topLeftCorner(totalContactDim, totalContactDim) = R_taskspace.topLeftCorner(totalContactDim, totalContactDim);
   // Joint velocities
   R.bottomRightCorner(info.actuatedDofNum, info.actuatedDofNum) =
-      baseToFeetJacobians.transpose() * R_taskspace.bottomRightCorner(totalContactDim, totalContactDim) * baseToFeetJacobians;
+      baseToFeetJacobians.transpose() * R_taskspace.bottomRightCorner(totalContactDim, totalContactDim) *
+      baseToFeetJacobians;
   return R;
 }
 
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-std::unique_ptr<StateInputCost> LionRobotInterface::getBaseTrackingCost(const std::string& taskFile, const CentroidalModelInfo& info,
-                                                                          bool verbose) {
+std::unique_ptr<StateInputCost> LionRobotInterface::getBaseTrackingCost(const std::string& taskFile,
+                                                                        const CentroidalModelInfo& info, bool verbose) {
   matrix_t Q(info.stateDim, info.stateDim);
   loadData::loadEigenMatrix(taskFile, "Q", Q);
   matrix_t R = initializeInputCostWeight(taskFile, info);
@@ -279,14 +290,15 @@ std::unique_ptr<StateInputCost> LionRobotInterface::getBaseTrackingCost(const st
     std::cerr << " #### =============================================================================\n";
   }
 
-  return std::unique_ptr<StateInputCost>(new LeggedRobotStateInputQuadraticCost(std::move(Q), std::move(R), info, *referenceManagerPtr_));
+  return std::unique_ptr<StateInputCost>(
+      new LeggedRobotStateInputQuadraticCost(std::move(Q), std::move(R), info, *referenceManagerPtr_));
 }
 
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-std::pair<scalar_t, RelaxedBarrierPenalty::Config> LionRobotInterface::loadFrictionConeSettings(const std::string& taskFile,
-                                                                                                  bool verbose) const {
+std::pair<scalar_t, RelaxedBarrierPenalty::Config> LionRobotInterface::loadFrictionConeSettings(
+    const std::string& taskFile, bool verbose) const {
   boost::property_tree::ptree pt;
   boost::property_tree::read_info(taskFile, pt);
   const std::string prefix = "frictionConeSoftConstraint.";
@@ -310,30 +322,31 @@ std::pair<scalar_t, RelaxedBarrierPenalty::Config> LionRobotInterface::loadFrict
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-std::unique_ptr<StateInputCost> LionRobotInterface::getFrictionConeConstraint(size_t contactPointIndex, scalar_t frictionCoefficient,
-                                                                                const RelaxedBarrierPenalty::Config& barrierPenaltyConfig) {
+std::unique_ptr<StateInputCost> LionRobotInterface::getFrictionConeConstraint(
+    size_t contactPointIndex, scalar_t frictionCoefficient, const RelaxedBarrierPenalty::Config& barrierPenaltyConfig) {
   FrictionConeConstraint::Config frictionConeConConfig(frictionCoefficient);
-  std::unique_ptr<FrictionConeConstraint> frictionConeConstraintPtr(
-      new FrictionConeConstraint(*referenceManagerPtr_, std::move(frictionConeConConfig), contactPointIndex, centroidalModelInfo_));
+  std::unique_ptr<FrictionConeConstraint> frictionConeConstraintPtr(new FrictionConeConstraint(
+      *referenceManagerPtr_, std::move(frictionConeConConfig), contactPointIndex, centroidalModelInfo_));
 
   std::unique_ptr<PenaltyBase> penalty(new RelaxedBarrierPenalty(barrierPenaltyConfig));
 
-  return std::unique_ptr<StateInputCost>(new StateInputSoftConstraint(std::move(frictionConeConstraintPtr), std::move(penalty)));
+  return std::unique_ptr<StateInputCost>(
+      new StateInputSoftConstraint(std::move(frictionConeConstraintPtr), std::move(penalty)));
 }
 
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
 std::unique_ptr<StateInputConstraint> LionRobotInterface::getZeroForceConstraint(size_t contactPointIndex) {
-  return std::unique_ptr<StateInputConstraint>(new ZeroForceConstraint(*referenceManagerPtr_, contactPointIndex, centroidalModelInfo_));
+  return std::unique_ptr<StateInputConstraint>(
+      new ZeroForceConstraint(*referenceManagerPtr_, contactPointIndex, centroidalModelInfo_));
 }
 
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-std::unique_ptr<StateInputConstraint> LionRobotInterface::getZeroVelocityConstraint(const EndEffectorKinematics<scalar_t>& eeKinematics,
-                                                                                      size_t contactPointIndex,
-                                                                                      bool useAnalyticalGradients) {
+std::unique_ptr<StateInputConstraint> LionRobotInterface::getZeroVelocityConstraint(
+    const EndEffectorKinematics<scalar_t>& eeKinematics, size_t contactPointIndex, bool useAnalyticalGradients) {
   auto eeZeroVelConConfig = [](scalar_t positionErrorGain) {
     EndEffectorLinearConstraint::Config config;
     config.b.setZero(3);
@@ -347,24 +360,26 @@ std::unique_ptr<StateInputConstraint> LionRobotInterface::getZeroVelocityConstra
 
   if (useAnalyticalGradients) {
     throw std::runtime_error(
-        "[LionRobotInterface::getZeroVelocityConstraint] The analytical end-effector zero velocity constraint is not implemented!");
+        "[LionRobotInterface::getZeroVelocityConstraint] The analytical end-effector zero velocity constraint is not "
+        "implemented!");
   } else {
-    return std::unique_ptr<StateInputConstraint>(new ZeroVelocityConstraintCppAd(*referenceManagerPtr_, eeKinematics, contactPointIndex,
-                                                                                 eeZeroVelConConfig(modelSettings_.positionErrorGain)));
+    return std::unique_ptr<StateInputConstraint>(new ZeroVelocityConstraintCppAd(
+        *referenceManagerPtr_, eeKinematics, contactPointIndex, eeZeroVelConConfig(modelSettings_.positionErrorGain)));
   }
 }
 
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-std::unique_ptr<StateInputConstraint> LionRobotInterface::getNormalVelocityConstraint(const EndEffectorKinematics<scalar_t>& eeKinematics,
-                                                                                        size_t contactPointIndex,
-                                                                                        bool useAnalyticalGradients) {
+std::unique_ptr<StateInputConstraint> LionRobotInterface::getNormalVelocityConstraint(
+    const EndEffectorKinematics<scalar_t>& eeKinematics, size_t contactPointIndex, bool useAnalyticalGradients) {
   if (useAnalyticalGradients) {
     throw std::runtime_error(
-        "[LionRobotInterface::getNormalVelocityConstraint] The analytical end-effector normal velocity constraint is not implemented!");
+        "[LionRobotInterface::getNormalVelocityConstraint] The analytical end-effector normal velocity constraint is "
+        "not implemented!");
   } else {
-    return std::unique_ptr<StateInputConstraint>(new NormalVelocityConstraintCppAd(*referenceManagerPtr_, eeKinematics, contactPointIndex));
+    return std::unique_ptr<StateInputConstraint>(
+        new NormalVelocityConstraintCppAd(*referenceManagerPtr_, eeKinematics, contactPointIndex));
   }
 }
 

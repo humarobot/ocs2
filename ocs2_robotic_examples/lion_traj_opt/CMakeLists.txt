@@ -173,6 +173,8 @@ include_directories(
 add_executable(${PROJECT_NAME}
     src/LionSqpTrajOpt.cpp
     src/LionInterface.cpp
+    src/OfflineReferenceManager.cpp
+    src/LionVisualizer.cpp
 )
 
 # # Rename C++ executable without prefix

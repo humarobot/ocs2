@@ -44,3 +44,16 @@ defaultModeSequenceTemplate
     [1]  1.0
   }
 }
+
+trotModeSchedule
+{
+   modeSequence
+   {
+     [0]     LF_RH
+     [1]     RF_LH
+   }
+   eventTimes
+   {
+     [0]     0.5
+   }
+}
