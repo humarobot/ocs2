@@ -29,7 +29,7 @@ void LionVisualizer::run() {
     SystemObservation observation;
     observation.state = solution_.stateTrajectory_[i];
     publishObservation(timeStamp, observation);
-    ros::Duration(0.02).sleep();
+    ros::Duration(0.01).sleep();
   }
 }
 

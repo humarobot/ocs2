@@ -69,7 +69,7 @@ class GaitSchedule {
    */
   void tileModeSequenceTemplate(scalar_t startTime, scalar_t finalTime);
 
- private:
+public:
   ModeSchedule modeSchedule_;
   ModeSequenceTemplate modeSequenceTemplate_;
   scalar_t phaseTransitionStanceTime_;

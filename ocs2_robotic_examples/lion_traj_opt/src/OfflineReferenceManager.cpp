@@ -49,6 +49,15 @@ OfflineReferenceManager::OfflineReferenceManager(const std::string& referenceFil
   setTargetTrajectories(TargetTrajectories(desiredTimeTrajectory, desiredStateTrajectory, desiredInputTrajectory));
 }
 
+/******************************************************************************************************/
+/******************************************************************************************************/
+/******************************************************************************************************/
+OfflineGaitReceiver::OfflineGaitReceiver(std::shared_ptr<GaitSchedule> gaitSchedulePtr,
+                                         const std::string& referenceFile)
+    : gaitSchedulePtr_(std::move(gaitSchedulePtr)) {
+      auto modeSchedule = loadModeSchedule(referenceFile, "trotModeSchedule", false);
+      gaitSchedulePtr_->modeSchedule_ = modeSchedule;
+    }
 
 }  // namespace legged_robot
 }  // namespace ocs2

@@ -22,6 +22,12 @@ int main(int argc, char** argv) {
   // Create the robot interface
   LionRobotInterface robotInterface(taskFile, urdfFile, referenceFile);
 
+  // Gait receiver
+  auto gaitReceiverPtr = std::make_shared<OfflineGaitReceiver>(
+      robotInterface.getSwitchedModelReferenceManagerPtr()->getGaitSchedule(), referenceFile);
+
+  
+
   // Offlinereferencemanager
   auto offlineReferenceManagerPtr =
       std::make_shared<OfflineReferenceManager>(referenceFile, robotInterface.getReferenceManagerPtr());
@@ -31,9 +37,10 @@ int main(int argc, char** argv) {
                                 robotInterface.getInitializer());
   // Set the reference manager
   solver.setReferenceManager(offlineReferenceManagerPtr);
+  solver.addSynchronizedModule(gaitReceiverPtr);
 
   // Solve the problem
-  solver.run(0.0, robotInterface.getInitialState(), 1.0);
+  solver.run(0.0, robotInterface.getInitialState(), 2.0);
   PrimalSolution solution;
   solver.getPrimalSolution(0.0, &solution);
   // Print solution's state

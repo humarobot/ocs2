@@ -150,8 +150,30 @@ void MultipleShootingSolver::runImpl(scalar_t initTime, const vector_t& initStat
     std::cerr << "\n++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
   }
 
+  //print initState
+  std::cout << "initState = ";
+  for (int i = 0; i < initState.size(); i++)
+  {
+    std::cout << initState[i] << " ";
+  }
+  std::cout << std::endl;
   // Determine time discretization, taking into account event times.
   const auto& eventTimes = this->getReferenceManager().getModeSchedule().eventTimes;
+  //print eventTimes
+  std::cout << "eventTimes = ";
+  for (int i = 0; i < eventTimes.size(); i++)
+  {
+    std::cout << eventTimes[i] << " ";
+  }
+  std::cout << std::endl;
+  const auto& modeSequence = this->getReferenceManager().getModeSchedule().modeSequence;
+  //print modeSequence
+  std::cout << "modeSequence = ";
+  for (int i = 0; i < modeSequence.size(); i++)
+  {
+    std::cout << modeSequence[i] << " ";
+  }
+  std::cout << std::endl;
   const auto timeDiscretization = timeDiscretizationWithEvents(initTime, finalTime, settings_.dt, eventTimes);
 
   // Initialize the state and input

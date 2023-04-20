@@ -171,6 +171,44 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        LF_FOOT:
+          Value: true
+        LF_calf:
+          Value: true
+        LF_hip:
+          Value: true
+        LF_thigh:
+          Value: true
+        LH_FOOT:
+          Value: true
+        LH_calf:
+          Value: true
+        LH_hip:
+          Value: true
+        LH_thigh:
+          Value: true
+        RF_FOOT:
+          Value: true
+        RF_calf:
+          Value: true
+        RF_hip:
+          Value: true
+        RF_thigh:
+          Value: true
+        RH_FOOT:
+          Value: true
+        RH_calf:
+          Value: true
+        RH_hip:
+          Value: true
+        RH_thigh:
+          Value: true
+        base:
+          Value: true
+        odom:
+          Value: true
+        unitree_imu:
+          Value: true
       Marker Alpha: 1
       Marker Scale: 1
       Name: TF
@@ -178,25 +216,48 @@ Visualization Manager:
       Show Axes: false
       Show Names: false
       Tree:
-        {}
+        odom:
+          base:
+            LF_hip:
+              LF_thigh:
+                LF_calf:
+                  LF_FOOT:
+                    {}
+            LH_hip:
+              LH_thigh:
+                LH_calf:
+                  LH_FOOT:
+                    {}
+            RF_hip:
+              RF_thigh:
+                RF_calf:
+                  RF_FOOT:
+                    {}
+            RH_hip:
+              RH_thigh:
+                RH_calf:
+                  RH_FOOT:
+                    {}
+            unitree_imu:
+              {}
       Update Interval: 0
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /legged_robot/optimizedStateTrajectory
       Name: Optimized State Trajectory
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /legged_robot/currentState
       Name: Current State
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/Group
       Displays:
         - Class: rviz/Group
@@ -243,7 +304,7 @@ Visualization Manager:
             {}
           Queue Size: 100
           Value: true
-      Enabled: true
+      Enabled: false
       Name: Target Trajectories
     - Alpha: 1
       Autocompute Intensity Bounds: true
@@ -251,7 +312,7 @@ Visualization Manager:
       Color: 200; 200; 200
       Color Layer: elevation
       Color Transformer: GridMapLayer
-      Enabled: true
+      Enabled: false
       Height Layer: elevation
       Height Transformer: GridMapLayer
       History Length: 1
@@ -265,7 +326,7 @@ Visualization Manager:
       Topic: /raisim_heightmap
       Unreliable: false
       Use Rainbow: true
-      Value: true
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 238; 238; 238
@@ -292,7 +353,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.638031005859375
+      Distance: 2.123434543609619
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -300,17 +361,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.17801520228385925
-        Y: 0.39354705810546875
-        Z: 0.4320068359375
+        X: 0.6219984292984009
+        Y: 0.18065467476844788
+        Z: 0.05918252468109131
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.3903983533382416
+      Pitch: 0.570398211479187
       Target Frame: <Fixed Frame>
-      Yaw: 2.2036001682281494
+      Yaw: 5.021756172180176
     Saved: ~
 Window Geometry:
   Displays:
@@ -328,5 +389,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1848
-  X: 2110
-  Y: 98
+  X: 1992
+  Y: 61
