@@ -56,7 +56,7 @@ struct ModeSchedule {
    *  Returns the mode based on the query time.
    *  Events are counted as follows:
    *      ------ | ------ | ------ | ...  ------ | ------
-   *         t[0]     t[1]     t[2]        t[n-1]
+   *            t[0]     t[1]     t[2]        t[n-1]
    *  mode: m[0]    m[1]     m[2] ...     m[n-1]    m[n]
    *
    *  If time equal to a switch time is requested, the lower count is taken

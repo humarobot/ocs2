@@ -85,6 +85,10 @@ add_library(${PROJECT_NAME}
   src/constraint/EndEffectorLinearConstraint.cpp
   src/constraint/FrictionConeConstraint.cpp
   src/constraint/ZeroForceConstraint.cpp
+  src/constraint/ZeroWrenchConstraint.cpp
+  src/constraint/FixPositionConstraint.cpp
+  src/constraint/ArmZeroVelocityConstraint.cpp
+  src/constraint/ArmEndEffectorConstraint.cpp
   src/constraint/NormalVelocityConstraintCppAd.cpp
   src/constraint/ZeroVelocityConstraintCppAd.cpp
   src/initialization/LeggedRobotInitializer.cpp

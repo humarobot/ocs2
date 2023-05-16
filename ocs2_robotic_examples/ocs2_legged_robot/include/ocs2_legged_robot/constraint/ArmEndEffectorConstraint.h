@@ -30,46 +30,42 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <memory>
-#include <string>
 
-#include <ocs2_core/PreComputation.h>
-#include <ocs2_pinocchio_interface/PinocchioInterface.h>
+#include <ocs2_pinocchio_interface/PinocchioEndEffectorKinematics.h>
+#include <ocs2_robotic_tools/end_effector/EndEffectorKinematics.h>
 
-#include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>
-
-#include "ocs2_legged_robot/common/ModelSettings.h"
-#include "ocs2_legged_robot/constraint/EndEffectorLinearConstraint.h"
-#include "ocs2_legged_robot/foot_planner/SwingTrajectoryPlanner.h"
+#include <ocs2_core/constraint/StateConstraint.h>
+#include <ocs2_oc/synchronized_module/ReferenceManager.h>
 
 namespace ocs2 {
 namespace legged_robot {
 
-/** Callback for caching and reference update */
-class LeggedRobotPreComputation : public PreComputation {
+class ArmEndEffectorConstraint final : public StateConstraint {
  public:
-  LeggedRobotPreComputation(PinocchioInterface pinocchioInterface, CentroidalModelInfo info,
-                            const SwingTrajectoryPlanner& swingTrajectoryPlanner, ModelSettings settings);
-  ~LeggedRobotPreComputation() override = default;
+  using vector3_t = Eigen::Matrix<scalar_t, 3, 1>;
+  using quaternion_t = Eigen::Quaternion<scalar_t>;
 
-  LeggedRobotPreComputation* clone() const override;
+  ArmEndEffectorConstraint(const EndEffectorKinematics<scalar_t>& endEffectorKinematics, const ReferenceManager& referenceManager);
+  ~ArmEndEffectorConstraint() override = default;
+  ArmEndEffectorConstraint* clone() const override { return new ArmEndEffectorConstraint(*endEffectorKinematicsPtr_, *referenceManagerPtr_); }
 
-  void request(RequestSet request, scalar_t t, const vector_t& x, const vector_t& u) override;
-
-  const std::vector<EndEffectorLinearConstraint::Config>& getEeNormalVelocityConstraintConfigs() const { return eeNormalVelConConfigs_; }
-
-  PinocchioInterface& getPinocchioInterface() { return pinocchioInterface_; }
-  const PinocchioInterface& getPinocchioInterface() const { return pinocchioInterface_; }
+  size_t getNumConstraints(scalar_t time) const override;
+  vector_t getValue(scalar_t time, const vector_t& state, const PreComputation& preComputation) const override;
+  VectorFunctionLinearApproximation getLinearApproximation(scalar_t time, const vector_t& state,
+                                                           const PreComputation& preComputation) const override;
 
  private:
-  LeggedRobotPreComputation(const LeggedRobotPreComputation& other) = delete;
-  PinocchioInterface pinocchioInterface_;
-  CentroidalModelInfo info_;
-  const SwingTrajectoryPlanner* swingTrajectoryPlannerPtr_;
-  const ModelSettings settings_;
-  CentroidalModelPinocchioMapping pinocchioMapping_;
+  ArmEndEffectorConstraint(const ArmEndEffectorConstraint& other) = default;
+  std::pair<vector_t, quaternion_t> interpolateEndEffectorPose(scalar_t time) const;
 
-  std::vector<EndEffectorLinearConstraint::Config> eeNormalVelConConfigs_;
+  /** Cached pointer to the pinocchio end effector kinematics. Is set to nullptr if not used. */
+  PinocchioEndEffectorKinematics* pinocchioEEKinPtr_ = nullptr;
+
+  vector3_t eeDesiredPosition_;
+  quaternion_t eeDesiredOrientation_;
+  std::unique_ptr<EndEffectorKinematics<scalar_t>> endEffectorKinematicsPtr_;
+  const ReferenceManager* referenceManagerPtr_;
 };
 
-}  // namespace legged_robot
+}  // namespace mobile_manipulator
 }  // namespace ocs2

@@ -39,7 +39,8 @@ SwitchedModelReferenceManager::SwitchedModelReferenceManager(std::shared_ptr<Gai
                                                              std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr)
     : ReferenceManager(TargetTrajectories(), ModeSchedule()),
       gaitSchedulePtr_(std::move(gaitSchedulePtr)),
-      swingTrajectoryPtr_(std::move(swingTrajectoryPtr)) {}
+      swingTrajectoryPtr_(std::move(swingTrajectoryPtr)) {
+      }
 
 /******************************************************************************************************/
 /******************************************************************************************************/
@@ -55,21 +56,22 @@ void SwitchedModelReferenceManager::modifyReferences(scalar_t initTime, scalar_t
                                                      TargetTrajectories& targetTrajectories, ModeSchedule& modeSchedule) {
   const auto timeHorizon = finalTime - initTime;
   modeSchedule = gaitSchedulePtr_->getModeSchedule(initTime - timeHorizon, finalTime + timeHorizon);
-  //print initTime and finalTime
-  std::cout << "initTime: " << initTime << std::endl;
-  std::cout << "finalTime: " << finalTime << std::endl;
-  //print modeSchedule.eventTimes
-  std::cout << "modeSchedule.eventTimes: ";
-  for (auto i = 0; i < modeSchedule.eventTimes.size(); i++) {
-    std::cout << modeSchedule.eventTimes[i] << " ";
-  }
-  std::cout << std::endl;
-  //print modeSchedule.modeSequence
-  std::cout << "modeSchedule.modeSequence: ";
-  for (auto i = 0; i < modeSchedule.modeSequence.size(); i++) {
-    std::cout << modeSchedule.modeSequence[i] << " ";
-  }
-  std::cout << std::endl;
+  // modeSchedule = getModeSchedule();
+  // //print initTime and finalTime
+  // std::cout << "initTime: " << initTime << std::endl;
+  // std::cout << "finalTime: " << finalTime << std::endl;
+  // //print modeSchedule.eventTimes
+  // std::cout << "modeSchedule.eventTimes: ";
+  // for (auto i = 0; i < modeSchedule.eventTimes.size(); i++) {
+  //   std::cout << modeSchedule.eventTimes[i] << " ";
+  // }
+  // std::cout << std::endl;
+  // //print modeSchedule.modeSequence
+  // std::cout << "modeSchedule.modeSequence: ";
+  // for (auto i = 0; i < modeSchedule.modeSequence.size(); i++) {
+  //   std::cout << modeSchedule.modeSequence[i] << " ";
+  // }
+  // std::cout << std::endl;
   const scalar_t terrainHeight = 0.02;
   swingTrajectoryPtr_->update(modeSchedule, terrainHeight);
 }

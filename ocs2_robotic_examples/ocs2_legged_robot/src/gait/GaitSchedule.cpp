@@ -76,28 +76,28 @@ void GaitSchedule::insertModeSequenceTemplate(const ModeSequenceTemplate& modeSe
 /******************************************************************************************************/
 /******************************************************************************************************/
 ModeSchedule GaitSchedule::getModeSchedule(scalar_t lowerBoundTime, scalar_t upperBoundTime) {
-  // auto& eventTimes = modeSchedule_.eventTimes;
-  // auto& modeSequence = modeSchedule_.modeSequence;
-  // const size_t index = std::lower_bound(eventTimes.begin(), eventTimes.end(), lowerBoundTime) - eventTimes.begin();
+  auto& eventTimes = modeSchedule_.eventTimes;
+  auto& modeSequence = modeSchedule_.modeSequence;
+  const size_t index = std::lower_bound(eventTimes.begin(), eventTimes.end(), lowerBoundTime) - eventTimes.begin();
 
-  // if (index > 0) {
-  //   // delete the old logic from index and set the default start phase to stance
-  //   eventTimes.erase(eventTimes.begin(), eventTimes.begin() + index - 1);  // keep the one before the last to make it stance
-  //   modeSequence.erase(modeSequence.begin(), modeSequence.begin() + index - 1);
+  if (index > 0) {
+    // delete the old logic from index and set the default start phase to stance
+    eventTimes.erase(eventTimes.begin(), eventTimes.begin() + index - 1);  // keep the one before the last to make it stance
+    modeSequence.erase(modeSequence.begin(), modeSequence.begin() + index - 1);
 
-  //   // set the default initial phase
-  //   modeSequence.front() = ModeNumber::STANCE;
-  // }
+    // set the default initial phase
+    modeSequence.front() = ModeNumber::STANCE;
+  }
 
-  // // Start tiling at time
-  // const auto tilingStartTime = eventTimes.empty() ? upperBoundTime : eventTimes.back();
+  // Start tiling at time
+  const auto tilingStartTime = eventTimes.empty() ? upperBoundTime : eventTimes.back();
 
-  // // delete the last default stance phase
-  // eventTimes.erase(eventTimes.end() - 1, eventTimes.end());
-  // modeSequence.erase(modeSequence.end() - 1, modeSequence.end());
+  // delete the last default stance phase
+  eventTimes.erase(eventTimes.end() - 1, eventTimes.end());
+  modeSequence.erase(modeSequence.end() - 1, modeSequence.end());
 
-  // // tile the template logic
-  // tileModeSequenceTemplate(tilingStartTime, upperBoundTime);
+  // tile the template logic
+  tileModeSequenceTemplate(tilingStartTime, upperBoundTime);
   return modeSchedule_;
 }
 

@@ -53,11 +53,19 @@ trotModeSchedule
      [1]     LF_RH
      [2]     RF_LH
      [3]     STANCE
+     [4]     RF_LH_RH
+     [5]     STANCE
+     [6]     RF_LH_RH
+     [7]     STANCE
    }
    eventTimes
    {
-     [0]     0.5
-     [1]     1.0
-     [2]     1.5
+     [0]     1.7
+     [1]     2.0
+     [2]     2.3
+     [3]     2.5
+     [4]     2.8
+     [5]     3.0
+     [6]     3.2
    }
 }

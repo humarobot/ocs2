@@ -1,5 +1,5 @@
 /******************************************************************************
-Copyright (c) 2020, Farbod Farshidian. All rights reserved.
+Copyright (c) 2021, Farbod Farshidian. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -27,15 +27,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-#include <pinocchio/fwd.hpp>
+#include "ocs2_legged_robot/constraint/ZeroWrenchConstraint.h"
 
-#include <pinocchio/algorithm/frames.hpp>
-#include <pinocchio/algorithm/jacobian.hpp>
-#include <pinocchio/algorithm/kinematics.hpp>
-
-#include <ocs2_core/misc/Numerics.h>
-
-#include <ocs2_legged_robot/LeggedRobotPreComputation.h>
+#include <ocs2_centroidal_model/AccessHelperFunctions.h>
 
 namespace ocs2 {
 namespace legged_robot {
@@ -43,62 +37,39 @@ namespace legged_robot {
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-LeggedRobotPreComputation::LeggedRobotPreComputation(PinocchioInterface pinocchioInterface, CentroidalModelInfo info,
-                                                     const SwingTrajectoryPlanner& swingTrajectoryPlanner, ModelSettings settings)
-    : pinocchioInterface_(std::move(pinocchioInterface)),
-      info_(std::move(info)),
-      swingTrajectoryPlannerPtr_(&swingTrajectoryPlanner),
-      settings_(std::move(settings)),
-      pinocchioMapping_(info)
-{
-  eeNormalVelConConfigs_.resize(info_.numThreeDofContacts);
+ZeroWrenchConstraint::ZeroWrenchConstraint(size_t contactPointIndex, CentroidalModelInfo info)
+    : StateInputConstraint(ConstraintOrder::Linear), contactPointIndex_(contactPointIndex), info_(std::move(info)) {}
+
+/******************************************************************************************************/
+/******************************************************************************************************/
+/******************************************************************************************************/
+bool ZeroWrenchConstraint::isActive(scalar_t time) const { return true; }
+
+/******************************************************************************************************/
+/******************************************************************************************************/
+/******************************************************************************************************/
+vector_t ZeroWrenchConstraint::getValue(scalar_t time, const vector_t& state, const vector_t& input,
+                                                                                const PreComputation& preComp) const {
+    vector_t force = centroidal_model::getContactForces(input, contactPointIndex_, info_);
+    vector_t torque = centroidal_model::getContactTorques(input, contactPointIndex_, info_);
+    // cancatinate force and torque, then return it
+    vector_t wrench(6);
+    wrench << force, torque;
+    return wrench;
 }
 
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-LeggedRobotPreComputation* LeggedRobotPreComputation::clone() const {
-  return new LeggedRobotPreComputation(pinocchioInterface_, info_, *swingTrajectoryPlannerPtr_, settings_);
-}
-
-/******************************************************************************************************/
-/******************************************************************************************************/
-/******************************************************************************************************/
-void LeggedRobotPreComputation::request(RequestSet request, scalar_t t, const vector_t& x, const vector_t& u) {
-  if (!request.containsAny(Request::Cost + Request::Constraint + Request::SoftConstraint)) {
-    return;
-  }
-  const auto& model = pinocchioInterface_.getModel();
-  auto& data = pinocchioInterface_.getData();
-  const auto q = pinocchioMapping_.getPinocchioJointPosition(x);
-
-  if (request.contains(Request::Approximation)) {
-    pinocchio::forwardKinematics(model, data, q);
-    pinocchio::updateFramePlacements(model, data);
-    pinocchio::computeJointJacobians(model, data);
-    pinocchio::updateGlobalPlacements(model, data);
-  } else {
-    pinocchio::forwardKinematics(model, data, q);
-    pinocchio::updateFramePlacements(model, data);
-  }
-
-  // lambda to set config for normal velocity constraints
-  auto eeNormalVelConConfig = [&](size_t footIndex) {
-    EndEffectorLinearConstraint::Config config;
-    config.b = (vector_t(1) << -swingTrajectoryPlannerPtr_->getZvelocityConstraint(footIndex, t)).finished();
-    config.Av = (matrix_t(1, 3) << 0.0, 0.0, 1.0).finished();
-    if (!numerics::almost_eq(settings_.positionErrorGain, 0.0)) {
-      config.b(0) -= settings_.positionErrorGain * swingTrajectoryPlannerPtr_->getZpositionConstraint(footIndex, t);
-      config.Ax = (matrix_t(1, 3) << 0.0, 0.0, settings_.positionErrorGain).finished();
-    }
-    return config;
-  };
-
-  if (request.contains(Request::Constraint)) {
-    for (size_t i = 0; i < info_.numThreeDofContacts; i++) {
-      eeNormalVelConConfigs_[i] = eeNormalVelConConfig(i);
-    }
-  }
+VectorFunctionLinearApproximation ZeroWrenchConstraint::getLinearApproximation(scalar_t time, const vector_t& state,
+                                                                               const vector_t& input,
+                                                                               const PreComputation& preComp) const {
+  VectorFunctionLinearApproximation approx;
+  approx.f = getValue(time, state, input, preComp);
+  approx.dfdx = matrix_t::Zero(6, state.size());
+  approx.dfdu = matrix_t::Zero(6, input.size());
+  approx.dfdu.middleCols<6>(3 * contactPointIndex_).diagonal() = vector_t::Ones(6);
+  return approx;
 }
 
 }  // namespace legged_robot

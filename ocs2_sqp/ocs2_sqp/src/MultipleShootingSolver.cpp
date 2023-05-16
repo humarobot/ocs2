@@ -151,36 +151,48 @@ void MultipleShootingSolver::runImpl(scalar_t initTime, const vector_t& initStat
   }
 
   //print initState
-  std::cout << "initState = ";
-  for (int i = 0; i < initState.size(); i++)
-  {
-    std::cout << initState[i] << " ";
-  }
-  std::cout << std::endl;
+  // std::cout << "initState = ";
+  // for (int i = 0; i < initState.size(); i++)
+  // {
+  //   std::cout << initState[i] << " ";
+  // }
+  // std::cout << std::endl;
   // Determine time discretization, taking into account event times.
   const auto& eventTimes = this->getReferenceManager().getModeSchedule().eventTimes;
   //print eventTimes
-  std::cout << "eventTimes = ";
-  for (int i = 0; i < eventTimes.size(); i++)
-  {
-    std::cout << eventTimes[i] << " ";
-  }
-  std::cout << std::endl;
+  // std::cout << "eventTimes = ";
+  // for (int i = 0; i < eventTimes.size(); i++)
+  // {
+  //   std::cout << eventTimes[i] << " ";
+  // }
+  // std::cout << std::endl;
   const auto& modeSequence = this->getReferenceManager().getModeSchedule().modeSequence;
   //print modeSequence
-  std::cout << "modeSequence = ";
-  for (int i = 0; i < modeSequence.size(); i++)
-  {
-    std::cout << modeSequence[i] << " ";
-  }
-  std::cout << std::endl;
+  // std::cout << "modeSequence = ";
+  // for (int i = 0; i < modeSequence.size(); i++)
+  // {
+  //   std::cout << modeSequence[i] << " ";
+  // }
+  // std::cout << std::endl;
   const auto timeDiscretization = timeDiscretizationWithEvents(initTime, finalTime, settings_.dt, eventTimes);
 
   // Initialize the state and input
   vector_array_t x, u;
   initializeStateInputTrajectories(initState, timeDiscretization, x, u);
+  // //print initState
+  // std::cout << "initState = "<<std::endl;
+  // std::cerr<<initState.transpose()<<std::endl;
+
+  // //print x
+  // std::cout << "x = "<<std::endl;;
+  // for (int i = 0; i < x.size(); i++)
+  // {
+  //   std::cout << x[i].transpose() << std::endl;
+  // }
+  // std::cout << std::endl;
 
   // Initialize references
+  // std::cerr<<"Ref Trajectory time: "<<this->getReferenceManager().getTargetTrajectories().stateTrajectory.front().transpose()<<std::endl;
   for (auto& ocpDefinition : ocpDefinitions_) {
     const auto& targetTrajectories = this->getReferenceManager().getTargetTrajectories();
     ocpDefinition.targetTrajectoriesPtr = &targetTrajectories;
@@ -203,6 +215,9 @@ void MultipleShootingSolver::runImpl(scalar_t initTime, const vector_t& initStat
     // Solve QP
     solveQpTimer_.startTimer();
     const vector_t delta_x0 = initState - x[0];
+    // //print delta_x0 size
+    // std::cerr << "delta_x0 size = " << delta_x0.size() << std::endl;
+    // std::cerr << "u[0] size = " << u[0].size() << std::endl;
     const auto deltaSolution = getOCPSolution(delta_x0);
     extractValueFunction(timeDiscretization, x);
     solveQpTimer_.endTimer();
@@ -303,6 +318,8 @@ MultipleShootingSolver::OcpSubproblemSolution MultipleShootingSolver::getOCPSolu
   }
 
   if (status != hpipm_status::SUCCESS) {
+    // print status
+    std::cerr<<"[MultipleShootingSolver] Failed to solve QP with status: " << status << std::endl;
     throw std::runtime_error("[MultipleShootingSolver] Failed to solve QP");
   }
 

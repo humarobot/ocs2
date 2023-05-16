@@ -29,33 +29,38 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include <iostream>
-#include <string>
-#include <vector>
+#include <ocs2_centroidal_model/CentroidalModelInfo.h>
+#include <ocs2_core/constraint/StateInputConstraint.h>
 
-#include <ocs2_core/Types.h>
+#include "ocs2_legged_robot/reference_manager/SwitchedModelReferenceManager.h"
 
 namespace ocs2 {
 namespace legged_robot {
 
-struct ModelSettings {
-  scalar_t positionErrorGain = 0.0;
+class ArmZeroVelocityConstraint final : public StateInputConstraint {
+ public:
+  /*
+   * Constructor
+   * @param [in] contactPointIndex : The 6 DoF contact index.
+   * @param [in] info : The centroidal model information.
+   */
+  ArmZeroVelocityConstraint();
 
-  scalar_t phaseTransitionStanceTime = 0.4;
+  ~ArmZeroVelocityConstraint() override = default;
+  ArmZeroVelocityConstraint* clone() const override { return new ArmZeroVelocityConstraint(*this); }
 
-  bool verboseCppAd = true;
-  bool recompileLibrariesCppAd = true;
-  std::string modelFolderCppAd = "/tmp/ocs2";
+  bool isActive(scalar_t time) const override;
+  size_t getNumConstraints(scalar_t time) const override { return 6; }
+  vector_t getValue(scalar_t time, const vector_t& state, const vector_t& input, const PreComputation& preComp) const override;
+  VectorFunctionLinearApproximation getLinearApproximation(scalar_t time, const vector_t& state,const vector_t& input,
+                                                           const PreComputation& preComp) const override;
 
-  // This is only used to get names for the knees and to check urdf for extra joints that need to be fixed.
-  std::vector<std::string> jointNames{"LF_HAA", "LF_HFE", "LF_KFE", "RF_HAA", "RF_HFE", "RF_KFE",
-                                      "LH_HAA", "LH_HFE", "LH_KFE", "RH_HAA", "RH_HFE", "RH_KFE",
-                                      "joint1","joint2","joint3","joint4","joint5","joint6"};
-  std::vector<std::string> contactNames6DoF{"hand_link"};
-  std::vector<std::string> contactNames3DoF{"LF_FOOT", "RF_FOOT", "LH_FOOT", "RH_FOOT"};
+ private:
+  ArmZeroVelocityConstraint(const ArmZeroVelocityConstraint& other) = default;
+
+//   const size_t contactPointIndex_;
+//   const CentroidalModelInfo info_;
 };
-
-ModelSettings loadModelSettings(const std::string& filename, const std::string& fieldName = "model_settings", bool verbose = "true");
 
 }  // namespace legged_robot
 }  // namespace ocs2

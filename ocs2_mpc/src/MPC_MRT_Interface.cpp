@@ -84,7 +84,8 @@ void MPC_MRT_Interface::advanceMpc() {
     std::lock_guard<std::mutex> lock(observationMutex_);
     currentObservation = currentObservation_;
   }
-
+  // // print currentObservation.state
+  // std::cerr<<"currentObservation.state: "<<currentObservation.state.transpose()<<std::endl;
   bool controllerIsUpdated = mpc_.run(currentObservation.time, currentObservation.state);
   if (!controllerIsUpdated) {
     return;

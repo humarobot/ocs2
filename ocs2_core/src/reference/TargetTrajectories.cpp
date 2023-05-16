@@ -31,13 +31,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ocs2_core/misc/Display.h>
 #include <ocs2_core/misc/LinearInterpolation.h>
+#include <iostream>
 
 namespace ocs2 {
 
 /******************************************************************************************************/
 /******************************************************************************************************/
 /***************************************************************************************************** */
-TargetTrajectories::TargetTrajectories(size_t size) : timeTrajectory(size), stateTrajectory(size), inputTrajectory(size) {}
+TargetTrajectories::TargetTrajectories(size_t size) : timeTrajectory(size), stateTrajectory(size), inputTrajectory(size) {
+  //print entering TargetTrajectories constructor
+  // std::cerr<<"Entering TargetTrajectories constructor,  size:"<<size<<std::endl;
+}
 
 /******************************************************************************************************/
 /******************************************************************************************************/
@@ -47,6 +51,7 @@ TargetTrajectories::TargetTrajectories(scalar_array_t desiredTimeTrajectory, vec
     : timeTrajectory(std::move(desiredTimeTrajectory)),
       stateTrajectory(std::move(desiredStateTrajectory)),
       inputTrajectory(std::move(desiredInputTrajectory)) {
+  // std::cerr<<"Entering TargetTrajectories constructor,  size:"<<this->size()<<std::endl;
   assert(stateTrajectory.size() == timeTrajectory.size());
   if (!inputTrajectory.empty()) {
     assert(inputTrajectory.size() == timeTrajectory.size());
