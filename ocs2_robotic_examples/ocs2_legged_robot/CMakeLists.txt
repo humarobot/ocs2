@@ -87,6 +87,7 @@ add_library(${PROJECT_NAME}
   src/constraint/ZeroForceConstraint.cpp
   src/constraint/ZeroWrenchConstraint.cpp
   src/constraint/FixPositionConstraint.cpp
+  src/constraint/BaseConstraint.cpp
   src/constraint/ArmZeroVelocityConstraint.cpp
   src/constraint/ArmEndEffectorConstraint.cpp
   src/constraint/NormalVelocityConstraintCppAd.cpp

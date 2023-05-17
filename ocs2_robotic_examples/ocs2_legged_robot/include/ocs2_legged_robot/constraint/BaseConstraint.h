@@ -37,17 +37,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace ocs2 {
 namespace legged_robot {
 
-class FixPositionConstraint final : public StateConstraint {
+class BaseConstraint final : public StateConstraint {
  public:
   /*
    * Constructor
    * @param [in] contactPointIndex : The 6 DoF contact index.
    * @param [in] info : The centroidal model information.
    */
-  FixPositionConstraint(const ReferenceManager& referenceManager);
+  BaseConstraint(const ReferenceManager& referenceManager);
 
-  ~FixPositionConstraint() override = default;
-  FixPositionConstraint* clone() const override { return new FixPositionConstraint(*this); }
+  ~BaseConstraint() override = default;
+  BaseConstraint* clone() const override { return new BaseConstraint(*this); }
 
   bool isActive(scalar_t time) const override;
   size_t getNumConstraints(scalar_t time) const override { return 6; }
@@ -56,7 +56,7 @@ class FixPositionConstraint final : public StateConstraint {
                                                            const PreComputation& preComp) const override;
 
  private:
-  FixPositionConstraint(const FixPositionConstraint& other) = default;
+  BaseConstraint(const BaseConstraint& other) = default;
   const ReferenceManager* referenceManagerPtr_;
 //   const size_t contactPointIndex_;
 //   const CentroidalModelInfo info_;

@@ -27,7 +27,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-#include "ocs2_legged_robot/constraint/FixPositionConstraint.h"
+#include "ocs2_legged_robot/constraint/BaseConstraint.h"
 
 #include <ocs2_centroidal_model/AccessHelperFunctions.h>
 
@@ -37,58 +37,34 @@ namespace legged_robot {
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-FixPositionConstraint::FixPositionConstraint(const ReferenceManager& referenceManager)
+BaseConstraint::BaseConstraint(const ReferenceManager& referenceManager)
     : StateConstraint(ConstraintOrder::Linear), referenceManagerPtr_(&referenceManager) {}
 
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-bool FixPositionConstraint::isActive(scalar_t time) const { return true; }
+bool BaseConstraint::isActive(scalar_t time) const { return true; }
 
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-vector_t FixPositionConstraint::getValue(scalar_t time, const vector_t& state, const PreComputation& preComp) const {
+vector_t BaseConstraint::getValue(scalar_t time, const vector_t& state, const PreComputation& preComp) const {
   const auto& targetTrajectories = referenceManagerPtr_->getTargetTrajectories();
-  const auto& stateTrajectory = targetTrajectories.stateTrajectory;
-  vector_t arm_joint_pos(6);
-  if (stateTrajectory.size() > 1) {
-    vector_t arm_joints = stateTrajectory[1].tail(6);
-    arm_joint_pos = state.tail(6) - arm_joints;
-  } else{
-    vector_t target_joint_pos(6);
-    target_joint_pos << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
-    arm_joint_pos = state.tail(6) - target_joint_pos;
-  }
-
-  // vector_t target_joint_pos(6);
-  // scalar_t joint1, joint2, joint3, joint4, joint5, joint6;
-  // //sin wave according to time
-  // joint1 = 0.5*sin(3*time);
-  // joint2 = 0.5*sin(3*time)+0.5;
-  // joint3 = 0.5*sin(3*time)+0.5;
-  // joint4 = 1.5*sin(3*time);
-  // joint5 = 1.5*sin(3*time);
-  // joint6 = 1.5*sin(3*time);
-  // joint1 = 1.0;
-  // joint2 = 1.0;
-  // joint3 = 1.0;
-  // joint4 = 1.0;
-  // joint5 = 1.0;
-  // joint6 = 1.0;
-  // target_joint_pos << joint1, joint2, joint3, joint4, joint5, joint6;
-  return arm_joint_pos;
+  vector_t desiredState = targetTrajectories.getDesiredState(time);
+  vector_t base_pose_err(6);
+  base_pose_err = state.segment(6,6)-desiredState.segment(6,6);
+  return base_pose_err;
 }
 
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-VectorFunctionLinearApproximation FixPositionConstraint::getLinearApproximation(scalar_t time, const vector_t& state,
+VectorFunctionLinearApproximation BaseConstraint::getLinearApproximation(scalar_t time, const vector_t& state,
                                                                                 const PreComputation& preComp) const {
   VectorFunctionLinearApproximation approx(6, state.rows(), 0);
   approx.f = getValue(time, state, preComp);
   approx.dfdx = matrix_t::Zero(6, state.size());
-  approx.dfdx.rightCols(6).diagonal() = vector_t::Ones(6);
+  approx.dfdx.middleCols(6,6) = vector_t::Ones(6);
   return approx;
 }
 
