@@ -71,7 +71,7 @@ vector_t ArmEndEffectorConstraint::getValue(scalar_t time, const vector_t& state
   // const auto desiredPositionOrientation = interpolateEndEffectorPose(time);
   vector_t position(3);
   quaternion_t orientation(Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitZ()));
-  position << 0.4, 0.0, 0.6;
+  position << 0.5, 0.0, 0.6;
   const auto desiredPositionOrientation = std::make_pair(position, orientation);
 
   vector_t constraint(6);
@@ -134,16 +134,17 @@ auto ArmEndEffectorConstraint::interpolateEndEffectorPose(scalar_t time) const -
     scalar_t alpha;
     std::tie(index, alpha) = LinearInterpolation::timeSegment(time, timeTrajectory);
 
-    const auto& lhs = stateTrajectory[index];
-    const auto& rhs = stateTrajectory[index + 1];
+    const auto& lhs = stateTrajectory[index].tail<7>();
+    const auto& rhs = stateTrajectory[index + 1].tail<7>();
     const quaternion_t q_lhs(lhs.tail<4>());
     const quaternion_t q_rhs(rhs.tail<4>());
 
     position = alpha * lhs.head<3>() + (1.0 - alpha) * rhs.head<3>();
     orientation = q_lhs.slerp((1.0 - alpha), q_rhs);
   } else {  // stateTrajectory.size() == 1
-    position = stateTrajectory.front().head<3>();
-    orientation = quaternion_t(stateTrajectory.front().tail<4>());
+    auto EeState = stateTrajectory.front().tail<7>();
+    position = EeState.head<3>();
+    orientation = quaternion_t(EeState.tail<4>());
   }
 
   return {position, orientation};
