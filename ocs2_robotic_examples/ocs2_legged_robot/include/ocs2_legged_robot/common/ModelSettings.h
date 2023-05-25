@@ -51,7 +51,7 @@ struct ModelSettings {
   std::vector<std::string> jointNames{"LF_HAA", "LF_HFE", "LF_KFE", "RF_HAA", "RF_HFE", "RF_KFE",
                                       "LH_HAA", "LH_HFE", "LH_KFE", "RH_HAA", "RH_HFE", "RH_KFE",
                                       "joint1","joint2","joint3","joint4","joint5","joint6"};
-  std::vector<std::string> contactNames6DoF{};
+  std::vector<std::string> contactNames6DoF{"hand_link"};
   std::vector<std::string> contactNames3DoF{"LF_FOOT", "RF_FOOT", "LH_FOOT", "RH_FOOT"};
 };
 

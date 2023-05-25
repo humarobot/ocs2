@@ -70,14 +70,16 @@ vector_t ArmEndEffectorConstraint::getValue(scalar_t time, const vector_t& state
 
   // const auto desiredPositionOrientation = interpolateEndEffectorPose(time);
   vector_t position(3);
-  quaternion_t orientation(Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitZ()));
-  position << 0.5, 0.0, 0.6;
+  quaternion_t orientation(Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitY()));
+  position << 0.4, 0.0, 0.4;
   const auto desiredPositionOrientation = std::make_pair(position, orientation);
 
   vector_t constraint(6);
   constraint.head<3>() = endEffectorKinematicsPtr_->getPosition(state).front() - desiredPositionOrientation.first;
   constraint.tail<3>() =
       endEffectorKinematicsPtr_->getOrientationError(state, {desiredPositionOrientation.second}).front();
+  // //print constraint
+  // std::cerr<<"constraint"<<constraint.transpose()<<std::endl;
   return constraint;
 }
 
@@ -96,8 +98,8 @@ VectorFunctionLinearApproximation ArmEndEffectorConstraint::getLinearApproximati
   }
   // const auto desiredPositionOrientation = interpolateEndEffectorPose(time);
   vector_t position(3);
-  quaternion_t orientation(Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitZ()));
-  position << 0.4, 0.0, 0.6;
+  quaternion_t orientation(Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitY()));
+  position << 0.4, 0.0, 0.4;
   const auto desiredPositionOrientation = std::make_pair(position, orientation);
   auto approximation = VectorFunctionLinearApproximation(6, state.rows(), 0);
 

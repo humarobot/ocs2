@@ -53,9 +53,11 @@ vector_t ZeroWrenchConstraint::getValue(scalar_t time, const vector_t& state, co
     vector_t force = centroidal_model::getContactForces(input, contactPointIndex_, info_);
     vector_t torque = centroidal_model::getContactTorques(input, contactPointIndex_, info_);
     // cancatinate force and torque, then return it
+    vector_t ref_wrench(6);
+    ref_wrench << -0.0,0.0,0.0,0.0,0.0,0.0;
     vector_t wrench(6);
     wrench << force, torque;
-    return wrench;
+    return wrench-ref_wrench;
 }
 
 /******************************************************************************************************/
