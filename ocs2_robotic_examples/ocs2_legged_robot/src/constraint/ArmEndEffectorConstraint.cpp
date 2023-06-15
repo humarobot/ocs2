@@ -68,11 +68,11 @@ vector_t ArmEndEffectorConstraint::getValue(scalar_t time, const vector_t& state
     pinocchioEEKinPtr_->setPinocchioInterface(preCompMM.getPinocchioInterface());
   }
 
-  // const auto desiredPositionOrientation = interpolateEndEffectorPose(time);
-  vector_t position(3);
-  quaternion_t orientation(Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitY()));
-  position << 0.4, 0.0, 0.4;
-  const auto desiredPositionOrientation = std::make_pair(position, orientation);
+  const auto desiredPositionOrientation = interpolateEndEffectorPose(time);
+  // vector_t position(3);
+  // quaternion_t orientation(Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitY()));
+  // position << 0.4, 0.0, 0.4;
+  // const auto desiredPositionOrientation = std::make_pair(position, orientation);
 
   vector_t constraint(6);
   constraint.head<3>() = endEffectorKinematicsPtr_->getPosition(state).front() - desiredPositionOrientation.first;
@@ -96,11 +96,12 @@ VectorFunctionLinearApproximation ArmEndEffectorConstraint::getLinearApproximati
     const auto& preCompMM = cast<legged_robot::LeggedRobotPreComputation>(preComputation);
     pinocchioEEKinPtr_->setPinocchioInterface(preCompMM.getPinocchioInterface());
   }
-  // const auto desiredPositionOrientation = interpolateEndEffectorPose(time);
-  vector_t position(3);
-  quaternion_t orientation(Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitY()));
-  position << 0.4, 0.0, 0.4;
-  const auto desiredPositionOrientation = std::make_pair(position, orientation);
+  const auto desiredPositionOrientation = interpolateEndEffectorPose(time);
+  // vector_t position(3);
+  // quaternion_t orientation(Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitY()));
+  // position << 0.4, 0.0, 0.4;
+  // const auto desiredPositionOrientation = std::make_pair(position, orientation);
+
   auto approximation = VectorFunctionLinearApproximation(6, state.rows(), 0);
 
   const auto eePosition = endEffectorKinematicsPtr_->getPositionLinearApproximation(state).front();
@@ -143,10 +144,11 @@ auto ArmEndEffectorConstraint::interpolateEndEffectorPose(scalar_t time) const -
 
     position = alpha * lhs.head<3>() + (1.0 - alpha) * rhs.head<3>();
     orientation = q_lhs.slerp((1.0 - alpha), q_rhs);
-  } else {  // stateTrajectory.size() == 1
-    auto EeState = stateTrajectory.front().tail<7>();
-    position = EeState.head<3>();
-    orientation = quaternion_t(EeState.tail<4>());
+  } else{
+    position = vector_t::Zero(3);
+    position<<0.4, 0.0, 0.2;
+    orientation = quaternion_t::Identity();
+
   }
 
   return {position, orientation};
